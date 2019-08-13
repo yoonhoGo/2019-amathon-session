@@ -222,6 +222,15 @@ INFO[0015] (service amathon-session-rest-api) has reached a steady state.  times
 INFO[0015] ECS Service has reached a stable state        desiredCount=1 runningCount=1 serviceName=amathon-session-rest-api
 ```
 
+3. 잘 배포가 되었는지 다시 확인해 봅시다.
+
+```shell
+$ ecs-cli ps --cluster-config amathon-session                                     
+Name                                              State                                                                                                                                                                                                                                                                            Ports                     TaskDefinition              Health
+4cc77380-6b9a-4c89-a09a-7f4d2db1d15b/json-server  RUNNING                                                                                                                                                                                                                                                                          13.125.81.164:80->80/tcp  amathon-session-rest-api:1  UNKNOWN
+1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server  STOPPED ExitCode: 137                                                                                                                                                                                                                                                            13.125.81.164:80->80/tcp  amathon-session:15          UNKNOWN
+```
+
 
 
 ## AWS에 Back-end API
