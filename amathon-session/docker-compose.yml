@@ -6,9 +6,19 @@ services:
       - 'http://jsonplaceholder.typicode.com/db'
     ports:
       - '80:80'
-    # logging:
-    #   driver: awslogs
-    #   options:
-    #     awslogs-group: amathon-session
-    #     awslogs-region: ap-northeast-2
-    #     awslogs-stream-prefix: amathon
+  # logging:
+  #   driver: awslogs
+  #   options:
+  #     awslogs-group: amathon-session
+  #     awslogs-region: ap-northeast-2
+  #     awslogs-stream-prefix: amathon
+  node:
+    image: node
+    volumes:
+      - './apollo-server:/usr/src/apollo-server'
+    working_dir: '/usr/src/apollo-server'
+    command: 'node src/index.js'
+    ports:
+      - '4000:4000'
+    links:
+      - json-server
