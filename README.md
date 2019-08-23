@@ -8,6 +8,8 @@
 
 ![img](https://d2fipm9e6ilyxz.cloudfront.net/ecs-objects-taskdef-1aba4ac72a5c999e0cb74833a18e6289eb71d32a.png)
 
+
+
 ## AWS의 컨테이너 서비스
 
 AWS의 Container Services 목록은 아래와 같습니다.
@@ -17,6 +19,8 @@ AWS의 Container Services 목록은 아래와 같습니다.
 - [EKS](https://aws.amazon.com/ko/eks/?nc2=h_m1)(Elastic Kubernetes Service)
 
 우리가 사용할 서비스는 ECS입니다.
+
+
 
 ## 첫번째, 개발 환경을 구성해봅시다.
 
@@ -65,6 +69,8 @@ amathon-session
 
 Test를 위해 터미널에서 `$ docker-compose up -d`를 실행하고 http://localhost:3000에 들어가서 잘 되는지 확인해주세요.
 
+
+
 ## 두번째, API를 ECS에 배포해봅시다.
 
 ### 1. `ecs-cli`를 설치해줍니다. [#](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
@@ -98,6 +104,8 @@ PS C:\> C:\existing\path;C:\Program Files\Amazon\ECSCLI
 ```shell
 ecs-cli --version
 ```
+
+
 
 ### 2. 클러스터 생성
 
@@ -133,6 +141,8 @@ Subnet created: subnet-0c0ebd09388877c0a
 Subnet created: subnet-0d93584df751b29d8
 Cluster creation succeeded.
 ```
+
+
 
 ### 3. 클러스터에 Compose 파일 배포
 
@@ -233,15 +243,29 @@ Name                                              State                         
 
 
 
-## AWS에 Back-end API
-
-- 
-
 ## 하태하태, GraphQL API
 
-- 
+### GraphQL?
+
+> **그래프QL**(영어: GraphQL)은 페이스북이 2012년에 개발하여 2015년에 공개적으로 발표된 데이터 질의어이다. 그래프QL은 REST 및 부속 웹서비스 아키텍쳐를 대체할 수 있다. 클라이언트는 필요한 데이터의 구조를 지정할 수 있으며, 서버는 정확히 동일한 구조로 데이터를 반환한다. 그래프QL은 사용자가 어떤 데이터가 필요한 지 명시할 수 있게 해 주는 강타입 언어이다. 이러한 구조를 통해 불필요한 데이터를 받게 되거나 필요한 데이터를 받지 못하는 문제를 피할 수 있다. - 위키백과
+
+결론적으로 얘기하자면 REST API를 대체할 수 있는 데이터 요청 언어라고 생각하면 될 것 같습니다.
+
+
 
 ## 마무으리
+
+1. 서비스 내리기
+
+```shell
+$ ecs-cli compose service rm --cluster-config amathon-session
+```
+
+2. 클러스터 내리기
+
+```shell
+$ ecs-cli down --force --cluster-config 
+```
 
 
 
@@ -250,3 +274,4 @@ Name                                              State                         
 - [Amazon ECS CLI 설치](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
 - [Docker compose 파일 구문 사용](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/cmd-ecs-cli-compose-parameters.html)
 - [ecs-cli compose](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/cmd-ecs-cli-compose.html)
+- [아마존 엘라스틱 컨테이너 서비스(ECS) 입문](https://www.44bits.io/ko/post/container-orchestration-101-with-docker-and-aws-elastic-container-service#서비스service)

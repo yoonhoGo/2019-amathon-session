@@ -2,15 +2,13 @@ version: '3'
 services:
   json-server:
     image: clue/json-server
-    command: 
-      - "http://jsonplaceholder.typicode.com/db"
+    command:
+      - 'http://jsonplaceholder.typicode.com/db'
     ports:
       - '80:80'
-    # volumes:
-    #   - './articles.json:/data/db.json'
-    logging:
-      driver: awslogs
-      options:
-        awslogs-group: amathon-session
-        awslogs-region: ap-northeast-2
-        awslogs-stream-prefix: amathon
+    # logging:
+    #   driver: awslogs
+    #   options:
+    #     awslogs-group: amathon-session
+    #     awslogs-region: ap-northeast-2
+    #     awslogs-stream-prefix: amathon
