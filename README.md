@@ -603,16 +603,29 @@ $ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.y
 1. 서비스 내리기
 
 ```shell
-$ ecs-cli compose service rm --cluster-config amathon-session
+$ ecs-cli compose --project-name amathon-session-api service rm --cluster-config amathon-session
+WARN[0000] Skipping unsupported YAML option for service...  option name=build service name=apollo-server
+INFO[0001] Updated ECS service successfully              desiredCount=0 serviceName=amathon-session-api
+INFO[0001] Service status                                desiredCount=0 runningCount=1 serviceName=amathon-session-api
+INFO[0047] Service status                                desiredCount=0 runningCount=0 serviceName=amathon-session-api
+INFO[0047] (service amathon-session-api) has stopped 1 running tasks: (task 324d2ebe-b267-4a4a-bd01-62f765c299ed).  timestamp="2019-08-25 12:29:27 +0000 UTC"
+INFO[0047] ECS Service has reached a stable state        desiredCount=0 runningCount=0 serviceName=amathon-session-api
+INFO[0047] Deleted ECS service                           service=amathon-session-api
+INFO[0047] ECS Service has reached a stable state        desiredCount=0 runningCount=0 serviceName=amathon-session-api
 ```
 
 2. 클러스터 내리기
 
 ```shell
-$ ecs-cli down --force --cluster-config 
+$ ecs-cli down --force --cluster-config amathon-session
+INFO[0000] Waiting for your cluster resources to be deleted... 
+INFO[0000] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
+INFO[0061] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
+INFO[0122] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
+INFO[0152] Deleted cluster
 ```
 
-3. ECR 이미지 삭제
+3. ECR 이미지 삭제(옵션)
 
 ```shell
 $ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --image-ids imageTag=trusty
@@ -621,7 +634,7 @@ $ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --i
 4. ECR 레포지토리 삭제
 
 ```shell
-$ aws ecr delete-repository --repository-name amathon-session/apollo-server --force
+$ aws ecr delete-repository --repository-name amathon-session/apollo-server --force --region ap-northeast-2
 ```
 
 
