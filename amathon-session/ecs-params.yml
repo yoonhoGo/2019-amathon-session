@@ -2,5 +2,8 @@ version: 1
 task_definition:
   services:
     json-server:
-      cpu_shares: 100
+      cpu_shares: 50
+      mem_limit: 256000000
+    node:
+      cpu_shares: 50
       mem_limit: 524288000

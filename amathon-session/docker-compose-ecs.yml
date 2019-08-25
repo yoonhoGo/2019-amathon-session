@@ -1,0 +1,28 @@
+version: '3'
+services:
+  json-server:
+    image: clue/json-server
+    command:
+      - 'http://jsonplaceholder.typicode.com/db'
+    ports:
+      - '80:80'
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: amathon-session
+        awslogs-region: ap-northeast-2
+        awslogs-stream-prefix: amathon
+  apollo-server:
+    image: 057836816709.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server
+    working_dir: '/usr/src/apollo-server'
+    command: 'node src/index.js'
+    ports:
+      - '4000:4000'
+    links:
+      - json-server
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: amathon-session
+        awslogs-region: ap-northeast-2
+        awslogs-stream-prefix: amathon

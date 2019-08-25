@@ -14,11 +14,9 @@
 
 AWS의 Container Services 목록은 아래와 같습니다.
 
-- [ECS](https://aws.amazon.com/ko/ecs/?nc2=h_m1)(Elastic Container Service)
+- [ECS](https://aws.amazon.com/ko/ecs/?nc2=h_m1)(Elastic Container Service) - 우리가 사용할 서비스는 ECS입니다.
 - [Fargate](https://aws.amazon.com/ko/fargate/?nc2=h_m1)(Serverless Container)
 - [EKS](https://aws.amazon.com/ko/eks/?nc2=h_m1)(Elastic Kubernetes Service)
-
-우리가 사용할 서비스는 ECS입니다.
 
 
 
@@ -121,7 +119,7 @@ INFO[0000] Saved ECS CLI cluster configuration amathon-session.
 ```
 
 ```shell
-$ ecs-cli configure profile --access-key {ACCESS_KEY} --secret-key {SECRET_KEY} --profile-name {PROFILE_NAME}
+$ ecs-cli configure profile --access-key {ACCESS_KEY} --secret-key ${SECRET_KEY} --profile-name ${PROFILE_NAME}
 ```
 
 2. 클러스터를 생성합니다.
@@ -149,7 +147,7 @@ Cluster creation succeeded.
 Compose 파일을 배포하기 전에 Compose 파일을 수정해야합니다. **ecs에서는 docker-compose 파일 구문 버전 1, 2, 3을 지원합니다.** 우리는 3을 이용해서 작업을 하고 있습니다. ECS CLI는 compose 파일에서 여러 파라미터를 지원합니다. 우선적으로 Logging 연결해볼까요?
 
 ```yaml
-# amathon-session/docker-compose.yml
+# amathon-session/docker-compose-ecs.yml
 version: '3'
 services:
   json-server:
@@ -177,7 +175,7 @@ task_definition:
 `ecs-cli compose up`을 이용하여 compose 파일을 배포할 수 있습니다.
 
 ```shell
-$ ecs-cli compose up --create-log-groups --cluster-config amathon-session
+$ ecs-cli compose up --create-log-groups --cluster-config amathon-session --file docker-compose-ecs.yml
 INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session:1"
 INFO[0000] Created Log Group amathon-session in ap-northeast-2 
 INFO[0000] Starting container...                         container=96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server
@@ -211,7 +209,7 @@ ECS에서는 두가지 방식으로 작업을 실행할 수 있습니다. 첫번
 1. 빈 클러스터에서 작업해야하므로 터미널에서 명령어를 실행해줍니다.
 
 ```shell
-$ecs-cli compose down --cluster-config amathon-session
+$ ecs-cli compose down --cluster-config amathon-session
 INFO[0001] Stopping container...                         container=1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server
 INFO[0001] Describe ECS container status                 container=1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server desiredStatus=STOPPED lastStatus=RUNNING taskDefinition="amathon-session:15"
 INFO[0013] Describe ECS container status                 container=1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server desiredStatus=STOPPED lastStatus=RUNNING taskDefinition="amathon-session:15"
@@ -222,7 +220,7 @@ INFO[0037] Stopped container...                          container=1b9e43b4-6151
 2. 이제 서비스를 구성해줍니다. 서비스 이름은 `amathon-session-rest-api` 로 하겠습니다.
 
 ```shell
-$ ecs-cli compose --project-name amathon-session-rest-api service up --cluster-config amathon-session
+$ ecs-cli compose --project-name amathon-session-rest-api --file docker-compose-ecs.yml service up --cluster-config amathon-session
 INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session-rest-api:1"
 INFO[0000] Created an ECS service                        service=amathon-session-rest-api taskDefinition="amathon-session-rest-api:1"
 INFO[0000] Updated ECS service successfully              desiredCount=1 serviceName=amathon-session-rest-api
@@ -243,13 +241,48 @@ Name                                              State                         
 
 
 
+# Advanced Step
+
+- 사전 작업: [`aws-cli` 설치](https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/cli-chap-install.html)
+
+## ECR 등록하기
+
+### ECR(Elastic Container Repository)?
+
+Docker Hub처럼 도커 컨테이너 이미지를 저장하는 저장소. AWS에서는 가입 후 1년동안 매월 500MB의 프리티어를 제공합니다.
+
+1. 기본 레지스트리에 Docker 인증
+
+``` shell
+$ aws ecr get-login --region ap-northeast-2 --no-include-email
+docker login -u AWS -p ${password} https://${aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
+$ docker login -u AWS -p ${password} https://${aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
+```
+
+2. 레포지토리 만들기
+
+```shell
+$ aws ecr create-repository --repository-name amathon-session/apollo-server --region ap-northeast-2
+{
+    "repository": {
+        "registryId": "${registryId}", 
+        "repositoryName": "amathon-session/apollo-server", 
+        "repositoryArn": "arn:aws:ecr:ap-northeast-2:${registryId}:repository/amathon-session/apollo-server", 
+        "createdAt": 1566546874.0, 
+        "repositoryUri": "${registryId}.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server"
+    }
+}
+```
+
+
+
 ## 하태하태, GraphQL API
 
 ### GraphQL?
 
 > **그래프QL**(영어: GraphQL)은 페이스북이 2012년에 개발하여 2015년에 공개적으로 발표된 데이터 질의어이다. 그래프QL은 REST 및 부속 웹서비스 아키텍쳐를 대체할 수 있다. 클라이언트는 필요한 데이터의 구조를 지정할 수 있으며, 서버는 정확히 동일한 구조로 데이터를 반환한다. 그래프QL은 사용자가 어떤 데이터가 필요한 지 명시할 수 있게 해 주는 강타입 언어이다. 이러한 구조를 통해 불필요한 데이터를 받게 되거나 필요한 데이터를 받지 못하는 문제를 피할 수 있다. - 위키백과
 
-결론적으로 얘기하자면 REST API를 대체할 수 있는 데이터 요청 언어라고 생각하면 될 것 같습니다. 시간이 되면 GraphQL에 관하여 더 설명을 드리고 일단 서비스 구축을 먼저 해보겠습니다.
+결론적으로 얘기하자면 REST API를 대체할 수 있는 데이터 요청 언어라고 생각하면 될 것 같습니다. **시간이 되면 GraphQL에 관하여 더 설명**을 드리고 일단 서비스 구축을 먼저 해보겠습니다.
 
 ```shell
 $ mkdir apollo-server && cd apollo-server
@@ -424,11 +457,148 @@ type AutogeneratedMainType {
 `
 ```
 
+```dockerfile
+# apollo-server/Dockerfile
+FROM node
+
+COPY ./apollo-server /usr/src/apollo-server
+
+EXPOSE 4000
+```
+
+```yaml
+# docker-compose.yml
+version: '3'
+services:
+  json-server:
+    image: clue/json-server
+    command:
+      - 'http://jsonplaceholder.typicode.com/db'
+    ports:
+      - '80:80'
+  apollo-server:
+    build:
+      context: .
+      dockerfile: ./apollo-server/Dockerfile
+    ports:
+      - '4000:4000'
+    links:
+      - json-server
+    command: 'node src/index.js'
+    working_dir: '/usr/src/apollo-server'
+```
+
+이제 로컬에 올려서 잘 되는지 확인해봅시다.
+
+```shell
+$ docker-compose up -d
+# http://localhost:4000
+```
+
+이제 ECS에 올리기 위한 준비를 합시다.
+
+```yaml
+# ecs-params.yml
+version: 1
+task_definition:
+  services:
+    json-server:
+      cpu_shares: 50
+      mem_limit: 256000000
+    node:
+      cpu_shares: 50
+      mem_limit: 524288000
+```
+
+```yaml
+# docker-compose-ecs.yml
+version: '3'
+services:
+  json-server:
+    image: clue/json-server
+    command:
+      - 'http://jsonplaceholder.typicode.com/db'
+    ports:
+      - '80:80'
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: amathon-session
+        awslogs-region: ap-northeast-2
+        awslogs-stream-prefix: amathon
+  apollo-server:
+    image: 057836816709.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server
+    working_dir: '/usr/src/apollo-server'
+    command: 'node src/index.js'
+    ports:
+      - '4000:4000'
+    links:
+      - json-server
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: amathon-session
+        awslogs-region: ap-northeast-2
+        awslogs-stream-prefix: amathon
+```
+
+ECR에 container image를 업로드 하겠습니다.
+
+```shell
+$ docker-compose build
+$ docker tag amathon_apollo-server:latest ${repositoryUri}
+$ docker push ${repositoryUri}
+```
+
+이제 ECS에 다시 배포 해보겠습니다.
+
+```shell
+$ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.yml service up --cluster-config amathon-session --create-log-groups
+INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session-api:13"
+WARN[0000] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists 
+WARN[0001] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists 
+INFO[0001] Updated ECS service successfully              desiredCount=1 serviceName=amathon-session-api
+INFO[0016] (service amathon-session-api) has started 1 tasks: (task 324d2ebe-b267-4a4a-bd01-62f765c299ed).  timestamp="2019-08-25 10:36:24 +0000 UTC"
+INFO[0078] Service status                                desiredCount=1 runningCount=1 serviceName=amathon-session-api
+INFO[0078] ECS Service has reached a stable state        desiredCount=1 runningCount=1 serviceName=amathon-session-api
+```
+
+```shell
+$ ecs-cli ps --cluster-config amathon-session
+Name                                                State                  Ports                        TaskDefinition          Health
+324d2ebe-b267-4a4a-bd01-62f765c299ed/json-server    RUNNING                13.125.60.80:80->80/tcp      amathon-session-api:13  UNKNOWN
+324d2ebe-b267-4a4a-bd01-62f765c299ed/apollo-server  RUNNING                13.125.60.80:4000->4000/tcp  amathon-session-api:13  UNKNOWN
+```
 
 
 
+## Scale out
 
-## 마무으리
+```shell
+$ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.yml service scale 2 --cluster-config amathon-session
+```
+
+
+
+## Scripts
+
+```json
+// apollo-server/package.json
+{
+  ...,
+  "scripts": {
+    "build": "docker-compose build",
+    "push": "docker push 057836816709.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server",
+    "ecr:deploy": "yarn build && yarn push",
+    "ecs:up": "ecs-cli compose --project-name amathon-session-api --file ../docker-compose-ecs.yml service up --cluster-config amathon-session --create-log-groups"
+  },
+	...
+}
+```
+
+
+
+## 마무으리💪
 
 1. 서비스 내리기
 
@@ -442,6 +612,18 @@ $ ecs-cli compose service rm --cluster-config amathon-session
 $ ecs-cli down --force --cluster-config 
 ```
 
+3. ECR 이미지 삭제
+
+```shell
+$ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --image-ids imageTag=trusty
+```
+
+4. ECR 레포지토리 삭제
+
+```shell
+$ aws ecr delete-repository --repository-name amathon-session/apollo-server --force
+```
+
 
 
 ## Reference
@@ -450,3 +632,4 @@ $ ecs-cli down --force --cluster-config
 - [Docker compose 파일 구문 사용](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/cmd-ecs-cli-compose-parameters.html)
 - [ecs-cli compose](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/cmd-ecs-cli-compose.html)
 - [아마존 엘라스틱 컨테이너 서비스(ECS) 입문](https://www.44bits.io/ko/post/container-orchestration-101-with-docker-and-aws-elastic-container-service#서비스service)
+- [ecs-cli compose service up](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/cmd-ecs-cli-compose-service-up.html)

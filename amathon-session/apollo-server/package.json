@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "build": "docker-compose build",
+    "push": "docker push 057836816709.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server",
+    "ecr:deploy": "yarn build && yarn push",
+    "ecs:up": "ecs-cli compose --project-name amathon-session-api --file ../docker-compose-ecs.yml service up --cluster-config amathon-session --create-log-groups"
+  },
   "dependencies": {
     "apollo-server": "^2.8.2",
     "axios": "^0.19.0",
