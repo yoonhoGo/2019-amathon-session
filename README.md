@@ -44,8 +44,6 @@ services: # 실행할 컨테이너들의 목록입니다.
       - '80:80'
 ```
 
-JSON Server는 json 파일이 필요합니다. 디렉토리 안에 `articles.json` 파일도 만들고 아래 내용을 붙여넣기 해주세요.
-
 그리고 `docker-compose.yml` 파일을 수정해주세요.
 
 ```yaml
