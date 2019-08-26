@@ -1,14 +1,10 @@
 # 클라우드 컨테이너 환경에서 Back-end API 구성하기 AtoZ
 
-[TOC]
-
 ## 개요
 
 이 세션은 도커(Docker), 컨테이너(Container), AWS가 무엇인지 선행 기초 지식이 있다는 가정 하에 설명하고 있습니다. 세션에 참여하시기 전에 꼭 위의 세가지에 대하여 학습하신 후 참석해주시기 바랍니다.
 
 ![img](https://d2fipm9e6ilyxz.cloudfront.net/ecs-objects-taskdef-1aba4ac72a5c999e0cb74833a18e6289eb71d32a.png)
-
-
 
 ## AWS의 컨테이너 서비스
 
@@ -18,8 +14,6 @@ AWS의 Container Services 목록은 아래와 같습니다.
 - [Fargate](https://aws.amazon.com/ko/fargate/?nc2=h_m1)(Serverless Container)
 - [EKS](https://aws.amazon.com/ko/eks/?nc2=h_m1)(Elastic Kubernetes Service)
 
-
-
 ## 첫번째, 개발 환경을 구성해봅시다.
 
 이제 우리는 간단한 REST API를 구성해보겠습니다. [JSON Server](https://github.com/typicode/json-server) 라고하는 간단한 API가 있습니다. 도입은 간단하게라는 제 신조에 따라 우선은 Docker Hub에 올라와 있는 [clue/json-server](https://hub.docker.com/r/clue/json-server) 를 사용하여 로컬 환경을 구성해보겠습니다.
@@ -28,25 +22,23 @@ AWS의 Container Services 목록은 아래와 같습니다.
 
 ### docker-compose
 
-`amathon-session` 이라는 디렉토리를 만드셨으면 디렉토리 안에 `docker-compose.yml` [^docker-compose]라는 파일을 만들어주세요.
+`amathon-session` 이라는 디렉토리를 만드셨으면 디렉토리 안에 `docker-compose.yml`라는 파일을 만들어주세요.
 
-[^docker-compose]:docker에서 container를 실행시키는 옵션들을 파일로 관리하여 컨테이너 간 실행 순서, 의존성 등을 관리할 수 있는 도구입니다.
+_docker-compose란? docker에서 container를 실행시키는 옵션들을 파일로 관리하여 컨테이너 간 실행 순서, 의존성 등을 관리할 수 있는 도구입니다._
 
 이제 아래의 내용을 `docker-compose.yml` 파일 안에 Copy&Paste 해주시기 바랍니다. `docker-compose.yml`은 YAML 파일 형식을 따르고 있습니다. YAML 파일에 대해서 잘 모르시는 분은 [#링크](https://ko.wikipedia.org/wiki/YAML)를 참고해주세요.
 
 ```yaml
 # amathon-session/docker-compose.yml
-version: '3' # docker-compose에서 인식할 yml 파일의 버전입니다. 1.x, 2.x, 3.x
+version: "3" # docker-compose에서 인식할 yml 파일의 버전입니다. 1.x, 2.x, 3.x
 services: # 실행할 컨테이너들의 목록입니다.
   json-server: # 실행할 컨테이너의 이름입니다.
     image: clue/json-server # 실행할 도커 이미지 이름입니다.
     ports: # Host와 Container간의 Port를 맵핑 시켜줍니다.
-      - '80:80'
+      - "80:80"
 ```
 
-JSON Server는 json 파일이 필요합니다. 디렉토리 안에 `articles.json` 파일도 만들고 아래 내용을 붙여넣기 해주세요.
-
-그리고 `docker-compose.yml` 파일을 수정해주세요.
+`docker-compose.yml` 파일을 수정해주세요.
 
 ```yaml
 # amathon-session/docker-compose.yml
@@ -65,9 +57,7 @@ amathon-session
 └── docker-compose.yml
 ```
 
-Test를 위해 터미널에서 `$ docker-compose up -d`를 실행하고 http://localhost:3000에 들어가서 잘 되는지 확인해주세요.
-
-
+Test를 위해 터미널에서 `$ docker-compose up -d`를 실행하고 'http://localhost:80'에 들어가서 잘 되는지 확인해주세요.
 
 ## 두번째, API를 ECS에 배포해봅시다.
 
@@ -89,12 +79,12 @@ $ sudo curl -o /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ec
 $ sudo chmod +x /usr/local/bin/ecs-cli
 ```
 
-#### Windows
+#### Windows (관리자 권한으로 PowerShell 실행)
 
 ```powershell
 PS C:\> New-Item ‘C:\Program Files\Amazon\ECSCLI’ -type directory
 PS C:\> Invoke-WebRequest -OutFile ‘C:\Program Files\Amazon\ECSCLI\ecs-cli.exe’ https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-windows-amd64-latest.exe
-PS C:\> C:\existing\path;C:\Program Files\Amazon\ECSCLI
+# 이후 환경 변수에 C:\Program Files\Amazon\ECSCLI 추가
 ```
 
 #### 설치 확인
@@ -102,8 +92,6 @@ PS C:\> C:\existing\path;C:\Program Files\Amazon\ECSCLI
 ```shell
 ecs-cli --version
 ```
-
-
 
 ### 2. 클러스터 생성
 
@@ -115,7 +103,7 @@ ecs-cli --version
 
 ```shell
 $ ecs-cli configure --cluster amathon-session --region ap-northeast-2 --default-launch-type EC2 --config-name amathon-session
-INFO[0000] Saved ECS CLI cluster configuration amathon-session. 
+INFO[0000] Saved ECS CLI cluster configuration amathon-session.
 ```
 
 ```shell
@@ -126,10 +114,10 @@ $ ecs-cli configure profile --access-key {ACCESS_KEY} --secret-key ${SECRET_KEY}
 
 ```shell
 $ ecs-cli up --capability-iam --size 1 --instance-type t2.micro --cluster-config amathon-session
-WARN[0000] You will not be able to SSH into your EC2 instances without a key pair. 
-INFO[0000] Using recommended Amazon Linux 2 AMI with ECS Agent 1.29.1 and Docker version 18.06.1-ce 
+WARN[0000] You will not be able to SSH into your EC2 instances without a key pair.
+INFO[0000] Using recommended Amazon Linux 2 AMI with ECS Agent 1.29.1 and Docker version 18.06.1-ce
 INFO[0000] Created cluster                               cluster=amathon-session region=ap-northeast-2
-INFO[0000] Waiting for your cluster resources to be created... 
+INFO[0000] Waiting for your cluster resources to be created...
 INFO[0000] Cloudformation stack status                   stackStatus=CREATE_IN_PROGRESS
 INFO[0061] Cloudformation stack status                   stackStatus=CREATE_IN_PROGRESS
 INFO[0121] Cloudformation stack status                   stackStatus=CREATE_IN_PROGRESS
@@ -140,11 +128,9 @@ Subnet created: subnet-0d93584df751b29d8
 Cluster creation succeeded.
 ```
 
-
-
 ### 3. 클러스터에 Compose 파일 배포
 
-Compose 파일을 배포하기 전에 Compose 파일을 수정해야합니다. **ecs에서는 docker-compose 파일 구문 버전 1, 2, 3을 지원합니다.** 우리는 3을 이용해서 작업을 하고 있습니다. ECS CLI는 compose 파일에서 여러 파라미터를 지원합니다. 우선적으로 Logging 연결해볼까요?
+Compose 파일을 배포하기 전에 Compose 파일을 수정해야합니다. **ecs에서는 docker-compose 파일 구문 버전 1, 2, 3을 지원합니다.** 우리는 3을 이용해서 작업을 하고 있습니다. ECS CLI는 compose 파일에서 여러 파라미터를 지원합니다. 우선적으로 Logging 연결해볼까요? 각 파일 이름에 주의해주세요!
 
 ```yaml
 # amathon-session/docker-compose-ecs.yml
@@ -154,7 +140,7 @@ services:
   	...
     logging:
       driver: awslogs
-      options: 
+      options:
         awslogs-group: amathon-session
         awslogs-region: ap-northeast-2
         awslogs-stream-prefix: amathon
@@ -177,7 +163,7 @@ task_definition:
 ```shell
 $ ecs-cli compose up --create-log-groups --cluster-config amathon-session --file docker-compose-ecs.yml
 INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session:1"
-INFO[0000] Created Log Group amathon-session in ap-northeast-2 
+INFO[0000] Created Log Group amathon-session in ap-northeast-2
 INFO[0000] Starting container...                         container=96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server
 INFO[0000] Describe ECS container status                 container=96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server desiredStatus=RUNNING lastStatus=PENDING taskDefinition="amathon-session:1"
 INFO[0012] Describe ECS container status                 container=96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server desiredStatus=RUNNING lastStatus=PENDING taskDefinition="amathon-session:1"
@@ -186,15 +172,13 @@ INFO[0024] Started container...                          container=96fbb9e3-ba11
 
 - `--cluster-config` 는 위에서 정의한 logging을 CloudWatch 로그 그룹을 만듭니다.
 
-잘 배포가 됬는지 확인해봅시다.
+잘 배포가 됐는지 확인해봅시다.
 
 ```shell
 $ ecs-cli ps --cluster-config amathon-session
 Name                                              State                Ports                    TaskDefinition     Health
 96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server  STOPPED ExitCode: 1  52.78.97.136:80->80/tcp  amathon-session:1  UNKNOWN
 ```
-
-
 
 ### 4. ECS 서비스 생성
 
@@ -233,13 +217,34 @@ INFO[0015] ECS Service has reached a stable state        desiredCount=1 runningC
 3. 잘 배포가 되었는지 다시 확인해 봅시다.
 
 ```shell
-$ ecs-cli ps --cluster-config amathon-session                                     
-Name                                              State                                                                                                                                                                                                                                                                            Ports                     TaskDefinition              Health
-4cc77380-6b9a-4c89-a09a-7f4d2db1d15b/json-server  RUNNING                                                                                                                                                                                                                                                                          13.125.81.164:80->80/tcp  amathon-session-rest-api:1  UNKNOWN
-1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server  STOPPED ExitCode: 137                                                                                                                                                                                                                                                            13.125.81.164:80->80/tcp  amathon-session:15          UNKNOWN
+$ ecs-cli ps --cluster-config amathon-session
+Name                                              State                  Ports                     TaskDefinition              Health
+4cc77380-6b9a-4c89-a09a-7f4d2db1d15b/json-server  RUNNING                13.125.81.164:80->80/tcp  amathon-session-rest-api:1  UNKNOWN
+1b9e43b4-6151-4c71-a722-81c3c7df3479/json-server  STOPPED ExitCode: 137  13.125.81.164:80->80/tcp  amathon-session:15          UNKNOWN
 ```
 
+4. 확인이 끝났으니 서비스를 종료합시다. 둘 중 하나만 입력하면 됩니다.
 
+```shell
+$ ecs-cli compose --project-name amathon-session-rest-api service down --cluster-config amathon-session
+$ ecs-cli compose --project-name amathon-session-rest-api --file docker-compose-ecs.yml service rm --cluster-config amathon-session
+INFO[0000] Updated ECS service successfully              desiredCount=0 force-deployment=false service=amathon-session-rest-api
+INFO[0000] Service status                                desiredCount=0 runningCount=1 serviceName=amathon-session-rest-api
+INFO[0030] Service status                                desiredCount=0 runningCount=0 serviceName=amathon-session-rest-api
+INFO[0030] (service amathon-session-rest-api) has stopped 1 running tasks: (task 31f508f3-ca01-46f1-9308-6669533c00fd).  timestamp="2019-08-26 07:46:00 +0000 UTC"
+INFO[0030] ECS Service has reached a stable state        desiredCount=0 runningCount=0 serviceName=amathon-session-rest-api
+INFO[0030] Deleted ECS service                           service=amathon-session-rest-api
+INFO[0030] ECS Service has reached a stable state        desiredCount=0 runningCount=0 serviceName=amathon-session-rest-api
+```
+
+5. 정상적으로 종료되었는지 확인합시다.
+
+```shell
+$ ecs-cli ps --cluster-config amathon-session
+Name                                              State                  Ports                   TaskDefinition              Health
+31f508f3-ca01-46f1-9308-6669533c00fd/json-server  STOPPED ExitCode: 137  13.125.9.44:80->80/tcp  amathon-session-rest-api:1  UNKNOWN
+4bb3dd7d-12bb-485f-bfa2-c4a0ba7cb1fb/json-server  STOPPED ExitCode: 137  13.125.9.44:80->80/tcp  amathon-session:1           UNKNOWN
+```
 
 # Advanced Step
 
@@ -253,7 +258,7 @@ Docker Hub처럼 도커 컨테이너 이미지를 저장하는 저장소. AWS에
 
 1. 기본 레지스트리에 Docker 인증
 
-``` shell
+```shell
 $ aws ecr get-login --region ap-northeast-2 --no-include-email
 docker login -u AWS -p ${password} https://${aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
 $ docker login -u AWS -p ${password} https://${aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
@@ -265,16 +270,14 @@ $ docker login -u AWS -p ${password} https://${aws_account_id}.dkr.ecr.us-east-1
 $ aws ecr create-repository --repository-name amathon-session/apollo-server --region ap-northeast-2
 {
     "repository": {
-        "registryId": "${registryId}", 
-        "repositoryName": "amathon-session/apollo-server", 
-        "repositoryArn": "arn:aws:ecr:ap-northeast-2:${registryId}:repository/amathon-session/apollo-server", 
-        "createdAt": 1566546874.0, 
+        "registryId": "${registryId}",
+        "repositoryName": "amathon-session/apollo-server",
+        "repositoryArn": "arn:aws:ecr:ap-northeast-2:${registryId}:repository/amathon-session/apollo-server",
+        "createdAt": 1566546874.0,
         "repositoryUri": "${registryId}.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server"
     }
 }
 ```
-
-
 
 ## 하태하태, GraphQL API
 
@@ -305,156 +308,156 @@ $ mkdir apollo-server && cd apollo-server
 
 ```js
 // apollo-server/src/index.js
-const { ApolloServer } = require('apollo-server')
-const axios = require('axios')
+const { ApolloServer } = require("apollo-server");
+const axios = require("axios");
 
 // This is a (sample) collection of books we'll be able to query
 // the GraphQL server for.  A more complete example might fetch
 // from an existing data source like a REST API or database.
 const restAPI = axios.create({
-  method: 'get',
-  baseURL: 'http://localhost',
-})
+  method: "get",
+  baseURL: "http://localhost"
+});
 function getData(url) {
-  return restAPI.get(url).then(({ data }) => data)
+  return restAPI.get(url).then(({ data }) => data);
 }
 
 // Type definitions define the "shape" of your data and specify
 // which ways the data can be fetched from the GraphQL server.
-const typeDefs = require('./typeDefs')
+const typeDefs = require("./typeDefs");
 
 // Resolvers define the technique for fetching the types in the
 // schema.  We'll retrieve books from the "books" array above.
 const resolvers = {
   Query: {
-    db: () => getData('/db'),
+    db: () => getData("/db"),
     todo: (parent, args, ctx) => getData(`/todos/${args.id}`),
-    todos: () => getData('/todos'),
+    todos: () => getData("/todos"),
     user: (parent, args, ctx) => getData(`/users/${args.id}`),
-    users: () => getData('/users'),
+    users: () => getData("/users"),
     photo: (parent, args, ctx) => getData(`/photos/${args.id}`),
-    photos: () => getData('/photos'),
+    photos: () => getData("/photos"),
     album: (parent, args, ctx) => getData(`/albums/${args.id}`),
-    albums: () => getData('/albums'),
+    albums: () => getData("/albums"),
     comment: (parent, args, ctx) => getData(`/comments/${args.id}`),
-    comments: () => getData('/comments'),
+    comments: () => getData("/comments"),
     post: (parent, args, ctx) => getData(`/posts/${args.id}`),
-    posts: () => getData('/posts'),
-  },
-}
+    posts: () => getData("/posts")
+  }
+};
 
 // In the most basic sense, the ApolloServer can be started
 // by passing type definitions (typeDefs) and the resolvers
 // responsible for fetching the data for those types.
-const server = new ApolloServer({ typeDefs, resolvers })
+const server = new ApolloServer({ typeDefs, resolvers });
 
 // This `listen` method launches a web-server.  Existing apps
 // can utilize middleware options, which we'll discuss later.
 server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`)
-})
+  console.log(`🚀  Server ready at ${url}`);
+});
 ```
 
 ```js
 // apollo-server/src/typeDefs.js
-const { gql } = require('apollo-server')
+const { gql } = require("apollo-server");
 
 module.exports = gql`
-schema {
-  query: Query
-}
+  schema {
+    query: Query
+  }
 
-type Query {
-  db: AutogeneratedMainType
-  todo(id: Int!): Todos
-  todos: [Todos]
-  user(id: Int!): Users
-  users: [Users]
-  photo(id: Int!): Photos
-  photos: [Photos]
-  album(id: Int!): Albums
-  albums: [Albums]
-  comment(id: Int!): Comments
-  comments: [Comments]
-  post(id: Int!): Posts
-  posts: [Posts]
-}
+  type Query {
+    db: AutogeneratedMainType
+    todo(id: Int!): Todos
+    todos: [Todos]
+    user(id: Int!): Users
+    users: [Users]
+    photo(id: Int!): Photos
+    photos: [Photos]
+    album(id: Int!): Albums
+    albums: [Albums]
+    comment(id: Int!): Comments
+    comments: [Comments]
+    post(id: Int!): Posts
+    posts: [Posts]
+  }
 
-type Todos {
-  userId: Int
-  id: Int
-  title: String
-  completed: Boolean
-}
+  type Todos {
+    userId: Int
+    id: Int
+    title: String
+    completed: Boolean
+  }
 
-type Company {
-  name: String
-  catchPhrase: String
-  bs: String
-}
+  type Company {
+    name: String
+    catchPhrase: String
+    bs: String
+  }
 
-type Geo {
-  lat: String
-  lng: String
-}
+  type Geo {
+    lat: String
+    lng: String
+  }
 
-type Address {
-  street: String
-  suite: String
-  city: String
-  zipcode: String
-  geo: Geo
-}
+  type Address {
+    street: String
+    suite: String
+    city: String
+    zipcode: String
+    geo: Geo
+  }
 
-type Users {
-  id: Int
-  name: String
-  username: String
-  email: String
-  phone: String
-  website: String
-  company: Company
-  address: Address
-}
+  type Users {
+    id: Int
+    name: String
+    username: String
+    email: String
+    phone: String
+    website: String
+    company: Company
+    address: Address
+  }
 
-type Photos {
-  albumId: Int
-  id: Int
-  title: String
-  url: String
-  thumbnailUrl: String
-}
+  type Photos {
+    albumId: Int
+    id: Int
+    title: String
+    url: String
+    thumbnailUrl: String
+  }
 
-type Albums {
-  userId: Int
-  id: Int
-  title: String
-}
+  type Albums {
+    userId: Int
+    id: Int
+    title: String
+  }
 
-type Comments {
-  postId: Int
-  id: Int
-  name: String
-  email: String
-  body: String
-}
+  type Comments {
+    postId: Int
+    id: Int
+    name: String
+    email: String
+    body: String
+  }
 
-type Posts {
-  userId: Int
-  id: Int
-  title: String
-  body: String
-}
+  type Posts {
+    userId: Int
+    id: Int
+    title: String
+    body: String
+  }
 
-type AutogeneratedMainType {
-  todos: [Todos]
-  users: [Users]
-  photos: [Photos]
-  albums: [Albums]
-  comments: [Comments]
-  posts: [Posts]
-}
-`
+  type AutogeneratedMainType {
+    todos: [Todos]
+    users: [Users]
+    photos: [Photos]
+    albums: [Albums]
+    comments: [Comments]
+    posts: [Posts]
+  }
+`;
 ```
 
 ```dockerfile
@@ -468,24 +471,24 @@ EXPOSE 4000
 
 ```yaml
 # docker-compose.yml
-version: '3'
+version: "3"
 services:
   json-server:
     image: clue/json-server
     command:
-      - 'http://jsonplaceholder.typicode.com/db'
+      - "http://jsonplaceholder.typicode.com/db"
     ports:
-      - '80:80'
+      - "80:80"
   apollo-server:
     build:
       context: .
       dockerfile: ./apollo-server/Dockerfile
     ports:
-      - '4000:4000'
+      - "4000:4000"
     links:
       - json-server
-    command: 'node src/index.js'
-    working_dir: '/usr/src/apollo-server'
+    command: "node src/index.js"
+    working_dir: "/usr/src/apollo-server"
 ```
 
 이제 로컬에 올려서 잘 되는지 확인해봅시다.
@@ -512,14 +515,14 @@ task_definition:
 
 ```yaml
 # docker-compose-ecs.yml
-version: '3'
+version: "3"
 services:
   json-server:
     image: clue/json-server
     command:
-      - 'http://jsonplaceholder.typicode.com/db'
+      - "http://jsonplaceholder.typicode.com/db"
     ports:
-      - '80:80'
+      - "80:80"
     logging:
       driver: awslogs
       options:
@@ -528,10 +531,10 @@ services:
         awslogs-stream-prefix: amathon
   apollo-server:
     image: 057836816709.dkr.ecr.ap-northeast-2.amazonaws.com/amathon-session/apollo-server
-    working_dir: '/usr/src/apollo-server'
-    command: 'node src/index.js'
+    working_dir: "/usr/src/apollo-server"
+    command: "node src/index.js"
     ports:
-      - '4000:4000'
+      - "4000:4000"
     links:
       - json-server
     logging:
@@ -546,17 +549,17 @@ ECR에 container image를 업로드 하겠습니다.
 
 ```shell
 $ docker-compose build
-$ docker tag amathon_apollo-server:latest ${repositoryUri}
+$ docker tag amathon-session_apollo-server:latest ${repositoryUri}
 $ docker push ${repositoryUri}
 ```
 
-이제 ECS에 다시 배포 해보겠습니다.
+이제 ECS에 다시 배포 해보겠습니다. 이름은 `amathon-session-api`로 하겠습니다.
 
 ```shell
 $ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.yml service up --cluster-config amathon-session --create-log-groups
 INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session-api:13"
-WARN[0000] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists 
-WARN[0001] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists 
+WARN[0000] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists
+WARN[0001] Failed to create log group amathon-session in ap-northeast-2: The specified log group already exists
 INFO[0001] Updated ECS service successfully              desiredCount=1 serviceName=amathon-session-api
 INFO[0016] (service amathon-session-api) has started 1 tasks: (task 324d2ebe-b267-4a4a-bd01-62f765c299ed).  timestamp="2019-08-25 10:36:24 +0000 UTC"
 INFO[0078] Service status                                desiredCount=1 runningCount=1 serviceName=amathon-session-api
@@ -570,15 +573,11 @@ Name                                                State                  Ports
 324d2ebe-b267-4a4a-bd01-62f765c299ed/apollo-server  RUNNING                13.125.60.80:4000->4000/tcp  amathon-session-api:13  UNKNOWN
 ```
 
-
-
 ## Scale out
 
 ```shell
 $ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.yml service scale 2 --cluster-config amathon-session
 ```
-
-
 
 ## Scripts
 
@@ -595,8 +594,6 @@ $ ecs-cli compose --project-name amathon-session-api --file docker-compose-ecs.y
 	...
 }
 ```
-
-
 
 ## 마무으리💪
 
@@ -618,7 +615,7 @@ INFO[0047] ECS Service has reached a stable state        desiredCount=0 runningC
 
 ```shell
 $ ecs-cli down --force --cluster-config amathon-session
-INFO[0000] Waiting for your cluster resources to be deleted... 
+INFO[0000] Waiting for your cluster resources to be deleted...
 INFO[0000] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
 INFO[0061] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
 INFO[0122] Cloudformation stack status                   stackStatus=DELETE_IN_PROGRESS
@@ -628,7 +625,7 @@ INFO[0152] Deleted cluster
 3. ECR 이미지 삭제(옵션)
 
 ```shell
-$ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --image-ids imageTag=trusty
+$ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --image-ids imageTag=latest
 ```
 
 4. ECR 레포지토리 삭제
@@ -636,8 +633,6 @@ $ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --i
 ```shell
 $ aws ecr delete-repository --repository-name amathon-session/apollo-server --force --region ap-northeast-2
 ```
-
-
 
 ## Reference
 
