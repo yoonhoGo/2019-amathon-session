@@ -161,7 +161,7 @@ task_definition:
 `ecs-cli compose up`을 이용하여 compose 파일을 배포할 수 있습니다.
 
 ```shell
-$ ecs-cli compose up --create-log-groups --cluster-config amathon-session --file docker-compose-ecs.yml
+$ ecs-cli compose --file docker-compose-ecs.yml --cluster-config amathon-session up --create-log-groups
 INFO[0000] Using ECS task definition                     TaskDefinition="amathon-session:1"
 INFO[0000] Created Log Group amathon-session in ap-northeast-2
 INFO[0000] Starting container...                         container=96fbb9e3-ba11-43a1-9eab-b75ab18770db/json-server
