@@ -3,12 +3,23 @@
 ## Steps🚀🚀🚀🚀🚀
 
 0. Home🏠
-
 1. [Basic step🤓](./1.%20Basic%20step.md)
-
 2. [Advanced Step😎](./2.%20Advanced%20step.md)
-
 3. [마무으리💪](./3.%20마무으리.md)
+
+
+
+## 더 생각해볼만한 것🤔
+
+1. Typescript
+2. GraphQL
+   1. Code First
+   2. Prisma
+3. Fargate or EKS(Kubernetes) or EB
+4. Serverless
+5. ...
+
+
 
 ## Reference
 
