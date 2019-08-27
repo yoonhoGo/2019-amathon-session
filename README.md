@@ -634,6 +634,10 @@ $ aws ecr batch-delete-image --repository-name amathon-session/apollo-server --i
 $ aws ecr delete-repository --repository-name amathon-session/apollo-server --force --region ap-northeast-2
 ```
 
+5. IAM Role을 생성한 경우(옵션)
+- 웹 콘솔에서 해당 계정을 삭제 해주시기 바랍니다.
+- (대부분의 경우)`~/.ecs/credentials`에서 해당 계정을 삭제해주시기 바랍니다.
+
 ## Reference
 
 - [Amazon ECS CLI 설치](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
