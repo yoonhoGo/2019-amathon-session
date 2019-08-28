@@ -1,5 +1,15 @@
 # 클라우드 컨테이너 환경에서 Back-end API 구성하기 AtoZ
 
+개요
+이 세션은 도커(Docker), 컨테이너(Container), AWS가 무엇인지 선행 기초 지식이 있다는 가정 하에 설명하고 있습니다. 세션에 참여하시기 전에 꼭 위의 세가지에 대하여 학습하신 후 참석해주시기 바랍니다.
+
+## 사전 준비
+1. docker
+2. docker-compose
+3. nodejs
+4. aws account
+5. (Advanced step)aws-cli
+
 ## Steps🚀🚀🚀🚀🚀
 
 0. Home🏠
