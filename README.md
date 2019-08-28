@@ -5,8 +5,11 @@
 
 ## 사전 준비
 1. docker
-2. docker-compose
-3. nodejs
+   - [Mac](https://docs.docker.com/docker-for-mac/install/)
+   - [Windows](https://docs.docker.com/docker-for-windows/install/)
+   - [linux:ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. [docker-compose](https://docs.docker.com/compose/install/)
+3. [nodejs](https://nodejs.org/ko/): 가능한 v10.x를 설치해주시고, 개인적으로 [nvm](https://github.com/nvm-sh/nvm)으로 이용하셔서 설치하시는 것을 권해드립니다.
 4. aws account
 5. (Advanced step)aws-cli
 
